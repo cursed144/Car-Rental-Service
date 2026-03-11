@@ -5,6 +5,8 @@ import com.example.carrental.dto.UserResponseDto;
 import com.example.carrental.entity.Role;
 import com.example.carrental.entity.User;
 import com.example.carrental.enums.RoleName;
+import com.example.carrental.exception.BadRequestException;
+import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.RoleRepository;
 import com.example.carrental.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +30,23 @@ public class UserService {
 
     public UserResponseDto createUser(UserRequestDto requestDto) {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new BadRequestException("Email already exists");
         }
 
         if (userRepository.existsByUsername(requestDto.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new BadRequestException("Username already exists");
         }
 
-        RoleName roleName = RoleName.valueOf(requestDto.getRoleName().toUpperCase());
+        RoleName roleName;
+
+        try {
+            roleName = RoleName.valueOf(requestDto.getRoleName().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid role name");
+        }
+
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User user = new User();
         user.setEmail(requestDto.getEmail());
@@ -61,7 +70,7 @@ public class UserService {
 
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return mapToResponseDto(user);
     }
@@ -69,12 +78,18 @@ public class UserService {
     public UserResponseDto updateUser(Long id, UserRequestDto requestDto) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        RoleName roleName = RoleName.valueOf(requestDto.getRoleName().toUpperCase());
+        RoleName roleName;
+
+        try {
+            roleName = RoleName.valueOf(requestDto.getRoleName().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid role name");
+        }
 
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         user.setEmail(requestDto.getEmail());
         user.setUsername(requestDto.getUsername());
@@ -88,7 +103,7 @@ public class UserService {
 
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
 
         userRepository.deleteById(id);
