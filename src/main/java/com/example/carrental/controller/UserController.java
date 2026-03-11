@@ -5,6 +5,8 @@ import com.example.carrental.dto.UserResponseDto;
 import com.example.carrental.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,30 +19,37 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserResponseDto> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public UserResponseDto getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PostMapping
-    public UserResponseDto createUser(@Valid @RequestBody UserRequestDto requestDto) {
-        return userService.createUser(requestDto);
+    public ResponseEntity<UserResponseDto> createUser(
+            @Valid @RequestBody UserRequestDto requestDto) {
+
+        UserResponseDto user = userService.createUser(requestDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PutMapping("/{id}")
-    public UserResponseDto updateUser(
+    public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequestDto requestDto) {
 
-        return userService.updateUser(id, requestDto);
+        return ResponseEntity.ok(userService.updateUser(id, requestDto));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
         userService.deleteUser(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
