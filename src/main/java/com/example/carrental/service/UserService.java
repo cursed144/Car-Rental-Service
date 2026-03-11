@@ -28,6 +28,22 @@ public class UserService {
                 .toList();
     }
 
+    private UserResponseDto mapToResponseDto(User user) {
+        return new UserResponseDto(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getRole().getName().name()
+        );
+    }
+
+    public UserResponseDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return mapToResponseDto(user);
+    }
+
     public UserResponseDto createUser(UserRequestDto requestDto) {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new BadRequestException("Email already exists");
@@ -59,26 +75,18 @@ public class UserService {
         return mapToResponseDto(savedUser);
     }
 
-    private UserResponseDto mapToResponseDto(User user) {
-        return new UserResponseDto(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                user.getRole().getName().name()
-        );
-    }
-
-    public UserResponseDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return mapToResponseDto(user);
-    }
-
     public UserResponseDto updateUser(Long id, UserRequestDto requestDto) {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), id)) {
+            throw new BadRequestException("Email already exists");
+        }
+
+        if (userRepository.existsByUsernameAndIdNot(requestDto.getUsername(), id)) {
+            throw new BadRequestException("Username already exists");
+        }
 
         RoleName roleName;
 
