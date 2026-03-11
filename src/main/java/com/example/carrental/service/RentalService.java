@@ -1,0 +1,92 @@
+package com.example.carrental.service;
+
+import com.example.carrental.dto.RentalRequestDto;
+import com.example.carrental.dto.RentalResponseDto;
+import com.example.carrental.entity.Car;
+import com.example.carrental.entity.Rental;
+import com.example.carrental.entity.User;
+import com.example.carrental.exception.BadRequestException;
+import com.example.carrental.exception.ResourceNotFoundException;
+import com.example.carrental.repository.CarRepository;
+import com.example.carrental.repository.RentalRepository;
+import com.example.carrental.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class RentalService {
+
+    private final RentalRepository rentalRepository;
+    private final UserRepository userRepository;
+    private final CarRepository carRepository;
+
+    public List<RentalResponseDto> getAllRentals() {
+        return rentalRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDto)
+                .toList();
+    }
+
+    public RentalResponseDto getRentalById(Long id) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
+
+        return mapToResponseDto(rental);
+    }
+
+    public RentalResponseDto createRental(RentalRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Car car = carRepository.findById(requestDto.getCarId())
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        if (requestDto.getStartDate() == null || requestDto.getEndDate() == null) {
+            throw new BadRequestException("Start date and end date are required");
+        }
+
+        if (requestDto.getEndDate().isBefore(requestDto.getStartDate())) {
+            throw new BadRequestException("End date cannot be before start date");
+        }
+
+        long days = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate());
+        if (days == 0) {
+            days = 1;
+        }
+
+        double totalPrice = car.getPricePerDay().doubleValue() * days;
+
+        Rental rental = new Rental();
+        rental.setUser(user);
+        rental.setCar(car);
+        rental.setStartDate(requestDto.getStartDate());
+        rental.setEndDate(requestDto.getEndDate());
+        rental.setTotalPrice(totalPrice);
+
+        Rental savedRental = rentalRepository.save(rental);
+
+        return mapToResponseDto(savedRental);
+    }
+
+    public void deleteRental(Long id) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
+
+        rentalRepository.delete(rental);
+    }
+
+    private RentalResponseDto mapToResponseDto(Rental rental) {
+        return new RentalResponseDto(
+                rental.getId(),
+                rental.getUser().getId(),
+                rental.getCar().getId(),
+                rental.getStartDate(),
+                rental.getEndDate(),
+                rental.getTotalPrice()
+        );
+    }
+}
