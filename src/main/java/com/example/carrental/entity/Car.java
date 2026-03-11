@@ -6,7 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "cars")
@@ -37,4 +40,12 @@ public class Car {
 
     @OneToOne(mappedBy = "car", cascade = CascadeType.ALL)
     private CarDetails details;
+
+    @ManyToMany
+    @JoinTable(
+            name = "car_services",
+            joinColumns = @JoinColumn(name = "car_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    private Set<Service> services = new HashSet<>();
 }

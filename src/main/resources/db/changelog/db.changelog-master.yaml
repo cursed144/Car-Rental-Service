@@ -179,3 +179,66 @@ databaseChangeLog:
             referencedTableName: cars
             referencedColumnNames: id
             constraintName: fk_car_details_car
+
+  - changeSet:
+      id: 6-create-services
+      author: student
+      changes:
+        - createTable:
+            tableName: services
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: description
+                  type: VARCHAR(500)
+
+  - changeSet:
+      id: 7-create-car-services
+      author: student
+      changes:
+        - createTable:
+            tableName: car_services
+            columns:
+              - column:
+                  name: car_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: car_services
+            columnNames: car_id, service_id
+            constraintName: pk_car_services
+
+        - addForeignKeyConstraint:
+            baseTableName: car_services
+            baseColumnNames: car_id
+            referencedTableName: cars
+            referencedColumnNames: id
+            constraintName: fk_car_services_car
+
+        - addForeignKeyConstraint:
+            baseTableName: car_services
+            baseColumnNames: service_id
+            referencedTableName: services
+            referencedColumnNames: id
+            constraintName: fk_car_services_service
