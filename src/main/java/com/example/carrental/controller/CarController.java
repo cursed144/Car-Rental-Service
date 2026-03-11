@@ -32,4 +32,17 @@ public class CarController {
     public ResponseEntity<CarResponseDto> createCar(@Valid @RequestBody CarRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(carService.createCar(requestDto));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CarResponseDto> updateCar(
+            @PathVariable Long id,
+            @Valid @RequestBody CarRequestDto requestDto) {
+        return ResponseEntity.ok(carService.updateCar(id, requestDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
+        carService.deleteCar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

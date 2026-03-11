@@ -63,6 +63,49 @@ public class CarService {
         return mapToResponseDto(savedCar);
     }
 
+    public CarResponseDto updateCar(Long id, CarRequestDto requestDto) {
+        Car car = carRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        FuelType fuelType;
+
+        try {
+            fuelType = FuelType.valueOf(requestDto.getFuelType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid fuel type");
+        }
+
+        car.setBrand(requestDto.getBrand());
+        car.setModel(requestDto.getModel());
+        car.setYear(requestDto.getYear());
+        car.setFuelType(fuelType);
+        car.setPricePerDay(requestDto.getPricePerDay());
+
+        CarDetails details = car.getDetails();
+
+        if (details == null) {
+            details = new CarDetails();
+            details.setCar(car);
+            car.setDetails(details);
+        }
+
+        details.setMileage(requestDto.getMileage());
+        details.setColor(requestDto.getColor());
+        details.setSeats(requestDto.getSeats());
+        details.setTransmission(requestDto.getTransmission());
+
+        Car updatedCar = carRepository.save(car);
+
+        return mapToResponseDto(updatedCar);
+    }
+
+    public void deleteCar(Long id) {
+        Car car = carRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        carRepository.delete(car);
+    }
+
     private CarResponseDto mapToResponseDto(Car car) {
         return new CarResponseDto(
                 car.getId(),
