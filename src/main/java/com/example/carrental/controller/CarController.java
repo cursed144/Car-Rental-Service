@@ -45,4 +45,24 @@ public class CarController {
         carService.deleteCar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{carId}/services/{serviceId}")
+    public ResponseEntity<Void> addServiceToCar(
+            @PathVariable Long carId,
+            @PathVariable Long serviceId) {
+
+        carService.addServiceToCar(carId, serviceId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{carId}/services/{serviceId}")
+    public ResponseEntity<Void> removeServiceFromCar(
+            @PathVariable Long carId,
+            @PathVariable Long serviceId) {
+
+        carService.removeServiceFromCar(carId, serviceId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

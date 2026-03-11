@@ -5,15 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "services")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Service {
+public class MaintenanceService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,5 +26,5 @@ public class Service {
     private String description;
 
     @ManyToMany(mappedBy = "services")
-    private Set<Car> cars = new HashSet<>();
+    private List<Car> cars = new ArrayList<>();
 }

@@ -2,72 +2,73 @@ package com.example.carrental.service;
 
 import com.example.carrental.dto.ServiceRequestDto;
 import com.example.carrental.dto.ServiceResponseDto;
-import com.example.carrental.entity.Service;
+import com.example.carrental.entity.MaintenanceService;
 import com.example.carrental.exception.BadRequestException;
 import com.example.carrental.exception.ResourceNotFoundException;
-import com.example.carrental.repository.ServiceRepository;
+import com.example.carrental.repository.MaintenanceServiceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@org.springframework.stereotype.Service
+@Service
 @RequiredArgsConstructor
-public class ServiceService {
+public class MaintenanceServiceService {
 
-    private final ServiceRepository serviceRepository;
+    private final MaintenanceServiceRepository maintenanceServiceRepository;
 
     public List<ServiceResponseDto> getAllServices() {
-        return serviceRepository.findAll()
+        return maintenanceServiceRepository.findAll()
                 .stream()
                 .map(this::mapToResponseDto)
                 .toList();
     }
 
     public ServiceResponseDto getServiceById(Long id) {
-        Service service = serviceRepository.findById(id)
+        MaintenanceService service = maintenanceServiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
         return mapToResponseDto(service);
     }
 
     public ServiceResponseDto createService(ServiceRequestDto requestDto) {
-        if (serviceRepository.existsByName(requestDto.getName())) {
+        if (maintenanceServiceRepository.existsByName(requestDto.getName())) {
             throw new BadRequestException("Service name already exists");
         }
 
-        Service service = new Service();
+        MaintenanceService service = new MaintenanceService();
         service.setName(requestDto.getName());
         service.setDescription(requestDto.getDescription());
 
-        Service savedService = serviceRepository.save(service);
+        MaintenanceService savedService = maintenanceServiceRepository.save(service);
 
         return mapToResponseDto(savedService);
     }
 
     public ServiceResponseDto updateService(Long id, ServiceRequestDto requestDto) {
-        Service service = serviceRepository.findById(id)
+        MaintenanceService service = maintenanceServiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
-        if (serviceRepository.existsByNameAndIdNot(requestDto.getName(), id)) {
+        if (maintenanceServiceRepository.existsByNameAndIdNot(requestDto.getName(), id)) {
             throw new BadRequestException("Service name already exists");
         }
 
         service.setName(requestDto.getName());
         service.setDescription(requestDto.getDescription());
 
-        Service updatedService = serviceRepository.save(service);
+        MaintenanceService updatedService = maintenanceServiceRepository.save(service);
 
         return mapToResponseDto(updatedService);
     }
 
     public void deleteService(Long id) {
-        Service service = serviceRepository.findById(id)
+        MaintenanceService service = maintenanceServiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
-        serviceRepository.delete(service);
+        maintenanceServiceRepository.delete(service);
     }
 
-    private ServiceResponseDto mapToResponseDto(Service service) {
+    private ServiceResponseDto mapToResponseDto(MaintenanceService service) {
         return new ServiceResponseDto(
                 service.getId(),
                 service.getName(),

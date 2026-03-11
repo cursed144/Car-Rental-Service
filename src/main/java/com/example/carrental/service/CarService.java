@@ -4,10 +4,12 @@ import com.example.carrental.dto.CarRequestDto;
 import com.example.carrental.dto.CarResponseDto;
 import com.example.carrental.entity.Car;
 import com.example.carrental.entity.CarDetails;
+import com.example.carrental.entity.MaintenanceService;
 import com.example.carrental.enums.FuelType;
 import com.example.carrental.exception.BadRequestException;
 import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.CarRepository;
+import com.example.carrental.repository.MaintenanceServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.List;
 public class CarService {
 
     private final CarRepository carRepository;
+    private final MaintenanceServiceRepository maintenanceServiceRepository;
 
     public List<CarResponseDto> getAllCars() {
         return carRepository.findAll()
@@ -104,6 +107,28 @@ public class CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
 
         carRepository.delete(car);
+    }
+
+    public void addServiceToCar(Long carId, Long serviceId) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        MaintenanceService service = maintenanceServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+
+        car.getServices().add(service);
+        carRepository.save(car);
+    }
+
+    public void removeServiceFromCar(Long carId, Long serviceId) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        MaintenanceService service = maintenanceServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+
+        car.getServices().remove(service);
+        carRepository.save(car);
     }
 
     private CarResponseDto mapToResponseDto(Car car) {

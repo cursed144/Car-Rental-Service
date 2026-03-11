@@ -2,7 +2,7 @@ package com.example.carrental.controller;
 
 import com.example.carrental.dto.ServiceRequestDto;
 import com.example.carrental.dto.ServiceResponseDto;
-import com.example.carrental.service.ServiceService;
+import com.example.carrental.service.MaintenanceServiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServiceController {
 
-    private final ServiceService serviceService;
+    private final MaintenanceServiceService serviceService;
 
     @GetMapping
     public ResponseEntity<List<ServiceResponseDto>> getAllServices() {
