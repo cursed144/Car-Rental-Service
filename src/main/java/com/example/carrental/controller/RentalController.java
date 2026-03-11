@@ -3,6 +3,7 @@ package com.example.carrental.controller;
 import com.example.carrental.dto.RentalRequestDto;
 import com.example.carrental.dto.RentalResponseDto;
 import com.example.carrental.service.RentalService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,15 @@ public class RentalController {
     }
 
     @PostMapping
-    public ResponseEntity<RentalResponseDto> createRental(@RequestBody RentalRequestDto requestDto) {
+    public ResponseEntity<RentalResponseDto> createRental(@Valid @RequestBody RentalRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(rentalService.createRental(requestDto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RentalResponseDto> updateRental(
+            @PathVariable Long id,
+            @Valid @RequestBody RentalRequestDto requestDto) {
+        return ResponseEntity.ok(rentalService.updateRental(id, requestDto));
     }
 
     @DeleteMapping("/{id}")

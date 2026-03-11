@@ -53,6 +53,17 @@ public class RentalService {
             throw new BadRequestException("End date cannot be before start date");
         }
 
+        boolean carUnavailable = rentalRepository
+                .existsByCarIdAndStartDateLessThanAndEndDateGreaterThan(
+                        requestDto.getCarId(),
+                        requestDto.getEndDate(),
+                        requestDto.getStartDate()
+                );
+
+        if (carUnavailable) {
+            throw new BadRequestException("Car is already rented for the selected period");
+        }
+
         long days = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate());
         if (days == 0) {
             days = 1;
@@ -70,6 +81,57 @@ public class RentalService {
         Rental savedRental = rentalRepository.save(rental);
 
         return mapToResponseDto(savedRental);
+    }
+
+    public RentalResponseDto updateRental(Long id, RentalRequestDto requestDto) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
+
+        User user = userRepository.findById(requestDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Car car = carRepository.findById(requestDto.getCarId())
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+
+        if (requestDto.getStartDate() == null || requestDto.getEndDate() == null) {
+            throw new BadRequestException("Start date and end date are required");
+        }
+
+        if (requestDto.getEndDate().isBefore(requestDto.getStartDate())) {
+            throw new BadRequestException("End date cannot be before start date");
+        }
+
+        boolean carUnavailable = rentalRepository
+                .existsByCarIdAndStartDateLessThanAndEndDateGreaterThanAndIdNot(
+                        requestDto.getCarId(),
+                        requestDto.getEndDate(),
+                        requestDto.getStartDate(),
+                        id
+                );
+
+        if (carUnavailable) {
+            throw new BadRequestException("Car is already rented for the selected period");
+        }
+
+        long days = java.time.temporal.ChronoUnit.DAYS.between(
+                requestDto.getStartDate(),
+                requestDto.getEndDate()
+        );
+        if (days == 0) {
+            days = 1;
+        }
+
+        double totalPrice = car.getPricePerDay().doubleValue() * days;
+
+        rental.setUser(user);
+        rental.setCar(car);
+        rental.setStartDate(requestDto.getStartDate());
+        rental.setEndDate(requestDto.getEndDate());
+        rental.setTotalPrice(totalPrice);
+
+        Rental updatedRental = rentalRepository.save(rental);
+
+        return mapToResponseDto(updatedRental);
     }
 
     public void deleteRental(Long id) {
