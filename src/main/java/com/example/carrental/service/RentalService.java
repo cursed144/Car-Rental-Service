@@ -10,9 +10,14 @@ import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.CarRepository;
 import com.example.carrental.repository.RentalRepository;
 import com.example.carrental.repository.UserRepository;
+import com.example.carrental.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -35,10 +40,18 @@ public class RentalService {
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
 
+        enforceRentalAccess(rental);
+
         return mapToResponseDto(rental);
     }
 
     public RentalResponseDto createRental(RentalRequestDto requestDto) {
+        CustomUserDetails currentUser = getCurrentUser();
+
+        if (!isAdmin(currentUser) && !currentUser.getId().equals(requestDto.getUserId())) {
+            throw new AccessDeniedException("You can create rentals only for your own account");
+        }
+
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -69,7 +82,7 @@ public class RentalService {
             days = 1;
         }
 
-        double totalPrice = car.getPricePerDay().doubleValue() * days;
+        BigDecimal totalPrice = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
         Rental rental = new Rental();
         rental.setUser(user);
@@ -86,6 +99,14 @@ public class RentalService {
     public RentalResponseDto updateRental(Long id, RentalRequestDto requestDto) {
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
+
+        enforceRentalAccess(rental);
+
+        CustomUserDetails currentUser = getCurrentUser();
+
+        if (!isAdmin(currentUser) && !currentUser.getId().equals(requestDto.getUserId())) {
+            throw new AccessDeniedException("You can update rentals only for your own account");
+        }
 
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -113,15 +134,12 @@ public class RentalService {
             throw new BadRequestException("Car is already rented for the selected period");
         }
 
-        long days = java.time.temporal.ChronoUnit.DAYS.between(
-                requestDto.getStartDate(),
-                requestDto.getEndDate()
-        );
+        long days = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate());
         if (days == 0) {
             days = 1;
         }
 
-        double totalPrice = car.getPricePerDay().doubleValue() * days;
+        BigDecimal totalPrice = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
         rental.setUser(user);
         rental.setCar(car);
@@ -150,5 +168,27 @@ public class RentalService {
                 rental.getEndDate(),
                 rental.getTotalPrice()
         );
+    }
+
+    private CustomUserDetails getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (CustomUserDetails) authentication.getPrincipal();
+    }
+
+    private boolean isAdmin(CustomUserDetails user) {
+        return user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private void enforceRentalAccess(Rental rental) {
+        CustomUserDetails currentUser = getCurrentUser();
+
+        if (isAdmin(currentUser)) {
+            return;
+        }
+
+        if (!rental.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You cannot access another user's rental");
+        }
     }
 }

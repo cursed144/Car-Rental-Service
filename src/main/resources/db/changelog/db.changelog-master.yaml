@@ -273,7 +273,7 @@ databaseChangeLog:
 
               - column:
                   name: total_price
-                  type: DOUBLE
+                  type: DECIMAL(10,2)
                   constraints:
                     nullable: false
 
