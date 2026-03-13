@@ -10,6 +10,7 @@ import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.RoleRepository;
 import com.example.carrental.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll()
@@ -67,7 +69,7 @@ public class UserService {
         User user = new User();
         user.setEmail(requestDto.getEmail());
         user.setUsername(requestDto.getUsername());
-        user.setPassword(requestDto.getPassword());
+        user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         user.setRole(role);
 
         User savedUser = userRepository.save(user);
@@ -101,7 +103,7 @@ public class UserService {
 
         user.setEmail(requestDto.getEmail());
         user.setUsername(requestDto.getUsername());
-        user.setPassword(requestDto.getPassword());
+        user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         user.setRole(role);
 
         User updatedUser = userRepository.save(user);
