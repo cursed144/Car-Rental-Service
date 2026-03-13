@@ -54,7 +54,8 @@ public class AuthService {
 
         CustomUserDetails userDetails = new CustomUserDetails(savedUser);
         String accessToken = jwtService.generateToken(userDetails);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
+        RefreshTokenService.CreatedRefreshToken createdRefreshToken =
+                refreshTokenService.createRefreshToken(savedUser);
 
         AuthResponseDto response = new AuthResponseDto(
                 "User registered successfully",
@@ -64,7 +65,7 @@ public class AuthService {
                 accessToken
         );
 
-        return new AuthResult(response, refreshToken.getToken());
+        return new AuthResult(response, createdRefreshToken.getRawToken());
     }
 
     public AuthResult login(AuthRequestDto requestDto) {
@@ -81,7 +82,8 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String accessToken = jwtService.generateToken(userDetails);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        RefreshTokenService.CreatedRefreshToken createdRefreshToken =
+                refreshTokenService.createRefreshToken(user);
 
         AuthResponseDto response = new AuthResponseDto(
                 "Login successful",
@@ -91,19 +93,18 @@ public class AuthService {
                 accessToken
         );
 
-        return new AuthResult(response, refreshToken.getToken());
+        return new AuthResult(response, createdRefreshToken.getRawToken());
     }
 
     public AuthResult refresh(String refreshTokenValue) {
-
         RefreshToken oldToken = refreshTokenService.verifyToken(refreshTokenValue);
 
-        RefreshToken newToken = refreshTokenService.rotateToken(oldToken);
+        RefreshTokenService.CreatedRefreshToken newToken =
+                refreshTokenService.rotateToken(oldToken);
 
-        User user = newToken.getUser();
+        User user = newToken.getRefreshToken().getUser();
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
-
         String accessToken = jwtService.generateToken(userDetails);
 
         AuthResponseDto response = new AuthResponseDto(
@@ -114,13 +115,11 @@ public class AuthService {
                 accessToken
         );
 
-        return new AuthResult(response, newToken.getToken());
+        return new AuthResult(response, newToken.getRawToken());
     }
 
     public void logout(String refreshTokenValue) {
-
         RefreshToken token = refreshTokenService.verifyToken(refreshTokenValue);
-
         refreshTokenService.revokeToken(token);
     }
 

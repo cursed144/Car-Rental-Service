@@ -319,7 +319,7 @@ databaseChangeLog:
                     nullable: false
 
               - column:
-                  name: token
+                  name: token_hash
                   type: VARCHAR(512)
                   constraints:
                     nullable: false
