@@ -30,7 +30,16 @@ public class RentalService {
     private final CarRepository carRepository;
 
     public List<RentalResponseDto> getAllRentals() {
-        return rentalRepository.findAll()
+        CustomUserDetails currentUser = getCurrentUser();
+
+        if (isAdmin(currentUser)) {
+            return rentalRepository.findAll()
+                    .stream()
+                    .map(this::mapToResponseDto)
+                    .toList();
+        }
+
+        return rentalRepository.findAllByUserId(currentUser.getId())
                 .stream()
                 .map(this::mapToResponseDto)
                 .toList();

@@ -19,7 +19,7 @@ public class RentalController {
 
     private final RentalService rentalService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping
     public ResponseEntity<List<RentalResponseDto>> getAllRentals() {
         return ResponseEntity.ok(rentalService.getAllRentals());

@@ -4,6 +4,7 @@ import com.example.carrental.entity.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
@@ -21,4 +22,8 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     );
 
     boolean existsByCarId(Long carId);
+
+    boolean existsByUserId(Long userId);
+
+    List<Rental> findAllByUserId(Long userId);
 }

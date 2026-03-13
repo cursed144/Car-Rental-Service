@@ -55,7 +55,6 @@ public class AuthController {
         }
 
         AuthService.AuthResult result = authService.refresh(refreshToken);
-
         addRefreshTokenCookie(response, result.getRefreshToken());
 
         return ResponseEntity.ok(result.getResponse());
@@ -75,6 +74,7 @@ public class AuthController {
                 .secure(false)
                 .path("/api/auth")
                 .maxAge(0)
+                .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
