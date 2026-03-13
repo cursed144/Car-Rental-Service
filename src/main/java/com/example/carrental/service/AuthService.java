@@ -1,9 +1,9 @@
 package com.example.carrental.service;
 
-import com.example.carrental.config.CustomUserDetails;
 import com.example.carrental.dto.AuthRequestDto;
 import com.example.carrental.dto.AuthResponseDto;
 import com.example.carrental.dto.RegisterRequestDto;
+import com.example.carrental.entity.RefreshToken;
 import com.example.carrental.entity.Role;
 import com.example.carrental.entity.User;
 import com.example.carrental.enums.RoleName;
@@ -11,6 +11,9 @@ import com.example.carrental.exception.BadRequestException;
 import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.RoleRepository;
 import com.example.carrental.repository.UserRepository;
+import com.example.carrental.security.CustomUserDetails;
+import com.example.carrental.security.JwtService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,8 +29,10 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
 
-    public AuthResponseDto register(RegisterRequestDto requestDto) {
+    public AuthResult register(RegisterRequestDto requestDto) {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new BadRequestException("Email already exists");
         }
@@ -47,15 +52,22 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        return new AuthResponseDto(
+        CustomUserDetails userDetails = new CustomUserDetails(savedUser);
+        String accessToken = jwtService.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
+
+        AuthResponseDto response = new AuthResponseDto(
                 "User registered successfully",
                 savedUser.getId(),
                 savedUser.getUsername(),
-                savedUser.getRole().getName().name()
+                savedUser.getRole().getName().name(),
+                accessToken
         );
+
+        return new AuthResult(response, refreshToken.getToken());
     }
 
-    public AuthResponseDto login(AuthRequestDto requestDto) {
+    public AuthResult login(AuthRequestDto requestDto) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         requestDto.getUsername(),
@@ -65,11 +77,27 @@ public class AuthService {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        return new AuthResponseDto(
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String accessToken = jwtService.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponseDto response = new AuthResponseDto(
                 "Login successful",
                 userDetails.getId(),
                 userDetails.getUsername(),
-                userDetails.getAuthorities().iterator().next().getAuthority()
+                user.getRole().getName().name(),
+                accessToken
         );
+
+        return new AuthResult(response, refreshToken.getToken());
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class AuthResult {
+        private final AuthResponseDto response;
+        private final String refreshToken;
     }
 }

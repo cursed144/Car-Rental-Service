@@ -1,4 +1,4 @@
-package com.example.carrental.config;
+package com.example.carrental.security;
 
 import com.example.carrental.entity.User;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.example.carrental.config;
+package com.example.carrental.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
