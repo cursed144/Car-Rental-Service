@@ -4,7 +4,10 @@ import com.example.carrental.dto.AuthRequestDto;
 import com.example.carrental.dto.AuthResponseDto;
 import com.example.carrental.dto.RegisterRequestDto;
 import com.example.carrental.exception.BadRequestException;
+import com.example.carrental.exception.TooManyRequestsException;
+import com.example.carrental.security.RateLimitService;
 import com.example.carrental.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +24,12 @@ public class AuthController {
 
     private static final long REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 
+    private static final int LOGIN_MAX_REQUESTS = 5;
+    private static final int REFRESH_MAX_REQUESTS = 10;
+    private static final long RATE_LIMIT_WINDOW_SECONDS = 60;
+
     private final AuthService authService;
+    private final RateLimitService rateLimitService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDto> register(
@@ -37,7 +45,19 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(
             @Valid @RequestBody AuthRequestDto requestDto,
+            HttpServletRequest request,
             HttpServletResponse response) {
+
+        String clientIp = getClientIp(request);
+        boolean allowed = rateLimitService.isAllowed(
+                "login:" + clientIp,
+                LOGIN_MAX_REQUESTS,
+                RATE_LIMIT_WINDOW_SECONDS
+        );
+
+        if (!allowed) {
+            throw new TooManyRequestsException("Too many login attempts. Please try again later.");
+        }
 
         AuthService.AuthResult result = authService.login(requestDto);
         addRefreshTokenCookie(response, result.getRefreshToken());
@@ -48,7 +68,19 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDto> refresh(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletRequest request,
             HttpServletResponse response) {
+
+        String clientIp = getClientIp(request);
+        boolean allowed = rateLimitService.isAllowed(
+                "refresh:" + clientIp,
+                REFRESH_MAX_REQUESTS,
+                RATE_LIMIT_WINDOW_SECONDS
+        );
+
+        if (!allowed) {
+            throw new TooManyRequestsException("Too many refresh attempts. Please try again later.");
+        }
 
         if (refreshToken == null) {
             throw new BadRequestException("Refresh token missing");
@@ -92,5 +124,15 @@ public class AuthController {
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
