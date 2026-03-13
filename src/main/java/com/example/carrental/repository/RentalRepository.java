@@ -19,4 +19,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             LocalDate startDate,
             Long id
     );
+
+    boolean existsByCarId(Long carId);
 }

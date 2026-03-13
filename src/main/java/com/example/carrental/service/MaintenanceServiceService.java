@@ -65,6 +65,10 @@ public class MaintenanceServiceService {
         MaintenanceService service = maintenanceServiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
+        if (service.getCars() != null && !service.getCars().isEmpty()) {
+            throw new BadRequestException("Cannot delete service because it is assigned to one or more cars");
+        }
+
         maintenanceServiceRepository.delete(service);
     }
 

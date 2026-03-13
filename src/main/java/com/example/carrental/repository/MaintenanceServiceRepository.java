@@ -8,4 +8,6 @@ public interface MaintenanceServiceRepository extends JpaRepository<MaintenanceS
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
+
+    boolean existsByIdAndCarsIsNotEmpty(Long id);
 }

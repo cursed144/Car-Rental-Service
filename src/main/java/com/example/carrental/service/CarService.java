@@ -9,6 +9,7 @@ import com.example.carrental.enums.FuelType;
 import com.example.carrental.exception.BadRequestException;
 import com.example.carrental.exception.ResourceNotFoundException;
 import com.example.carrental.repository.CarRepository;
+import com.example.carrental.repository.RentalRepository;
 import com.example.carrental.repository.MaintenanceServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 public class CarService {
 
     private final CarRepository carRepository;
+    private final RentalRepository rentalRepository;
     private final MaintenanceServiceRepository maintenanceServiceRepository;
 
     public List<CarResponseDto> getAllCars() {
@@ -106,6 +108,15 @@ public class CarService {
         Car car = carRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
 
+        if (rentalRepository.existsByCarId(id)) {
+            throw new BadRequestException("Cannot delete car because it has rentals");
+        }
+
+        if (car.getServices() != null && !car.getServices().isEmpty()) {
+            car.getServices().clear();
+        }
+
+        carRepository.save(car);
         carRepository.delete(car);
     }
 
@@ -116,18 +127,26 @@ public class CarService {
         MaintenanceService service = maintenanceServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
+        boolean alreadyLinked = car.getServices().stream()
+                .anyMatch(s -> s.getId().equals(serviceId));
+
+        if (alreadyLinked) {
+            throw new BadRequestException("Service is already assigned to this car");
+        }
+
         car.getServices().add(service);
         carRepository.save(car);
     }
-
     public void removeServiceFromCar(Long carId, Long serviceId) {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
 
-        MaintenanceService service = maintenanceServiceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+        boolean removed = car.getServices().removeIf(s -> s.getId().equals(serviceId));
 
-        car.getServices().remove(service);
+        if (!removed) {
+            throw new ResourceNotFoundException("Service is not assigned to this car");
+        }
+
         carRepository.save(car);
     }
 
