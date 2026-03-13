@@ -10,12 +10,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
@@ -25,12 +24,6 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @Value("${app.security.swagger-public:false}")
-    private boolean swaggerPublic;
-
-    @Value("${app.security.h2-public:false}")
-    private boolean h2Public;
 
     @Value("${app.security.csrf-enabled:false}")
     private boolean csrfEnabled;
@@ -50,9 +43,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        http.securityMatcher("/api/**");
+
         if (csrfEnabled) {
+            CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+            csrfRepo.setCookiePath("/");
+            csrfRepo.setHeaderName("X-XSRF-TOKEN");
+
             http.csrf(csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRepository(csrfRepo)
+                    .ignoringRequestMatchers(
+                            "/api/auth/login",
+                            "/api/auth/register"
+                    )
             );
         } else {
             http.csrf(AbstractHttpConfigurer::disable);
@@ -71,32 +74,13 @@ public class SecurityConfig {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
         );
 
-        http.authorizeHttpRequests(auth -> {
-            auth.requestMatchers("/api/auth/**").permitAll();
-
-            if (swaggerPublic) {
-                auth.requestMatchers(
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/api-docs/**"
-                ).permitAll();
-            }
-
-            if (h2Public) {
-                auth.requestMatchers("/h2-console/**").permitAll();
-            }
-
-            auth.requestMatchers("/api/**").authenticated();
-            auth.anyRequest().permitAll();
-        });
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().denyAll()
+        );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        if (h2Public) {
-            http.headers(headers ->
-                    headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
-            );
-        }
 
         return http.build();
     }
