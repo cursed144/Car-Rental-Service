@@ -94,6 +94,36 @@ public class AuthService {
         return new AuthResult(response, refreshToken.getToken());
     }
 
+    public AuthResult refresh(String refreshTokenValue) {
+
+        RefreshToken oldToken = refreshTokenService.verifyToken(refreshTokenValue);
+
+        RefreshToken newToken = refreshTokenService.rotateToken(oldToken);
+
+        User user = newToken.getUser();
+
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+
+        String accessToken = jwtService.generateToken(userDetails);
+
+        AuthResponseDto response = new AuthResponseDto(
+                "Token refreshed",
+                user.getId(),
+                user.getUsername(),
+                user.getRole().getName().name(),
+                accessToken
+        );
+
+        return new AuthResult(response, newToken.getToken());
+    }
+
+    public void logout(String refreshTokenValue) {
+
+        RefreshToken token = refreshTokenService.verifyToken(refreshTokenValue);
+
+        refreshTokenService.revokeToken(token);
+    }
+
     @Getter
     @RequiredArgsConstructor
     public static class AuthResult {

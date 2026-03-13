@@ -3,6 +3,7 @@ package com.example.carrental.controller;
 import com.example.carrental.dto.AuthRequestDto;
 import com.example.carrental.dto.AuthResponseDto;
 import com.example.carrental.dto.RegisterRequestDto;
+import com.example.carrental.exception.BadRequestException;
 import com.example.carrental.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -42,6 +43,43 @@ public class AuthController {
         addRefreshTokenCookie(response, result.getRefreshToken());
 
         return ResponseEntity.ok(result.getResponse());
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDto> refresh(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
+
+        if (refreshToken == null) {
+            throw new BadRequestException("Refresh token missing");
+        }
+
+        AuthService.AuthResult result = authService.refresh(refreshToken);
+
+        addRefreshTokenCookie(response, result.getRefreshToken());
+
+        return ResponseEntity.ok(result.getResponse());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
+
+        if (refreshToken != null) {
+            authService.logout(refreshToken);
+        }
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.noContent().build();
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
