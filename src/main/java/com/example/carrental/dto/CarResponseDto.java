@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,8 +18,11 @@ public class CarResponseDto {
     private int year;
     private String fuelType;
     private BigDecimal pricePerDay;
+    private String description;
     private int mileage;
     private String color;
     private int seats;
     private String transmission;
+    private List<Long> serviceIds;
+    private List<CarImageResponseDto> images;
 }

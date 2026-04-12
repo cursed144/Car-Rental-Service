@@ -19,13 +19,13 @@ public class CarController {
 
     private final CarService carService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
     public ResponseEntity<List<CarResponseDto>> getAllCars() {
         return ResponseEntity.ok(carService.getAllCars());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}")
     public ResponseEntity<CarResponseDto> getCarById(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
@@ -39,9 +39,7 @@ public class CarController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<CarResponseDto> updateCar(
-            @PathVariable Long id,
-            @Valid @RequestBody CarRequestDto requestDto) {
+    public ResponseEntity<CarResponseDto> updateCar(@PathVariable Long id, @Valid @RequestBody CarRequestDto requestDto) {
         return ResponseEntity.ok(carService.updateCar(id, requestDto));
     }
 
@@ -54,20 +52,14 @@ public class CarController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{carId}/services/{serviceId}")
-    public ResponseEntity<Void> addServiceToCar(
-            @PathVariable Long carId,
-            @PathVariable Long serviceId) {
-
+    public ResponseEntity<Void> addServiceToCar(@PathVariable Long carId, @PathVariable Long serviceId) {
         carService.addServiceToCar(carId, serviceId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{carId}/services/{serviceId}")
-    public ResponseEntity<Void> removeServiceFromCar(
-            @PathVariable Long carId,
-            @PathVariable Long serviceId) {
-
+    public ResponseEntity<Void> removeServiceFromCar(@PathVariable Long carId, @PathVariable Long serviceId) {
         carService.removeServiceFromCar(carId, serviceId);
         return ResponseEntity.noContent().build();
     }

@@ -24,4 +24,6 @@ public class RentalRequestDto {
     @NotNull(message = "End date is required")
     @FutureOrPresent(message = "End date cannot be in the past")
     private LocalDate endDate;
+
+    private String status;
 }

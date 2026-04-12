@@ -1,5 +1,6 @@
 package com.example.carrental.entity;
 
+import com.example.carrental.enums.RentalStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,10 @@ public class Rental {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private RentalStatus status;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

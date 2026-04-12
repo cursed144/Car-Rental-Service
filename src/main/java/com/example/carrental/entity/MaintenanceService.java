@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,9 @@ public class MaintenanceService {
 
     @Column(length = 500)
     private String description;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 
     @ManyToMany(mappedBy = "services")
     private List<Car> cars = new ArrayList<>();

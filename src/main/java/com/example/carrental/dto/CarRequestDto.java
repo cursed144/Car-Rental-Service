@@ -25,6 +25,9 @@ public class CarRequestDto {
     @DecimalMin(value = "0.0", inclusive = false, message = "Price per day must be greater than 0")
     private BigDecimal pricePerDay;
 
+    @Size(max = 2000, message = "Description must be at most 2000 characters")
+    private String description;
+
     @Min(value = 0, message = "Mileage cannot be negative")
     private int mileage;
 

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,7 @@ public class Car {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal pricePerDay;
 
-    @OneToOne(mappedBy = "car", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
     private CarDetails details;
 
     @ManyToMany
@@ -48,4 +47,7 @@ public class Car {
             inverseJoinColumns = @JoinColumn(name = "service_id")
     )
     private List<MaintenanceService> services = new ArrayList<>();
+
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CarImage> images = new ArrayList<>();
 }

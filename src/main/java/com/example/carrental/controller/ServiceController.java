@@ -15,33 +15,35 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/services")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class ServiceController {
 
     private final MaintenanceServiceService serviceService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
     public ResponseEntity<List<ServiceResponseDto>> getAllServices() {
         return ResponseEntity.ok(serviceService.getAllServices());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}")
     public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable Long id) {
         return ResponseEntity.ok(serviceService.getServiceById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ServiceResponseDto> createService(@Valid @RequestBody ServiceRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(serviceService.createService(requestDto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> updateService(
-            @PathVariable Long id,
-            @Valid @RequestBody ServiceRequestDto requestDto) {
+    public ResponseEntity<ServiceResponseDto> updateService(@PathVariable Long id, @Valid @RequestBody ServiceRequestDto requestDto) {
         return ResponseEntity.ok(serviceService.updateService(id, requestDto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
         serviceService.deleteService(id);

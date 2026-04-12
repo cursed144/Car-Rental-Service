@@ -16,4 +16,5 @@ public class RentalResponseDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;
+    private String status;
 }
