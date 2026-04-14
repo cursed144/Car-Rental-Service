@@ -19,13 +19,11 @@ public class CarController {
 
     private final CarService carService;
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
     public ResponseEntity<List<CarResponseDto>> getAllCars() {
         return ResponseEntity.ok(carService.getAllCars());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}")
     public ResponseEntity<CarResponseDto> getCarById(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
