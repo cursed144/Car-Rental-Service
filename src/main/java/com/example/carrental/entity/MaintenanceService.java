@@ -6,8 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "services")
@@ -30,5 +30,5 @@ public class MaintenanceService {
     private BigDecimal price;
 
     @ManyToMany(mappedBy = "services")
-    private List<Car> cars = new ArrayList<>();
+    private Set<Car> cars = new LinkedHashSet<>();
 }

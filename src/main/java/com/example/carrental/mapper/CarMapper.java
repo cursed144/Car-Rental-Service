@@ -14,6 +14,12 @@ public interface CarMapper {
     @Mapping(target = "color", source = "details.color")
     @Mapping(target = "seats", source = "details.seats")
     @Mapping(target = "transmission", source = "details.transmission")
-    @Mapping(target = "serviceIds", expression = "java(car.getServices().stream().map(com.example.carrental.entity.MaintenanceService::getId).toList())")
+    @Mapping(
+            target = "serviceIds",
+            expression = "java(car.getServices().stream()" +
+                    ".map(com.example.carrental.entity.MaintenanceService::getId)" +
+                    ".sorted()" +
+                    ".toList())"
+    )
     CarResponseDto toDto(Car car);
 }

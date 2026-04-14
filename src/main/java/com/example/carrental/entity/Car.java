@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "cars")
@@ -46,8 +46,8 @@ public class Car {
             joinColumns = @JoinColumn(name = "car_id"),
             inverseJoinColumns = @JoinColumn(name = "service_id")
     )
-    private List<MaintenanceService> services = new ArrayList<>();
+    private Set<MaintenanceService> services = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CarImage> images = new ArrayList<>();
+    private Set<CarImage> images = new LinkedHashSet<>();
 }
