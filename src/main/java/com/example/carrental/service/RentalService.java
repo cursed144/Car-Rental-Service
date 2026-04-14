@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -48,18 +49,21 @@ public class RentalService {
         return rentalMapper.toDto(rental);
     }
 
+    @Transactional
     public RentalResponseDto createRental(RentalRequestDto requestDto) {
         CustomUserDetails currentUser = getCurrentUser();
         if (!isAdmin(currentUser) && !currentUser.getId().equals(requestDto.getUserId())) {
             throw new AccessDeniedException("You can create rentals only for your own account");
         }
 
+        validateDates(requestDto.getStartDate(), requestDto.getEndDate());
+
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        Car car = carRepository.findById(requestDto.getCarId())
+
+        Car car = carRepository.findByIdForUpdate(requestDto.getCarId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
 
-        validateDates(requestDto.getStartDate(), requestDto.getEndDate());
         ensureAvailability(requestDto.getCarId(), requestDto.getStartDate(), requestDto.getEndDate(), null);
 
         Rental rental = new Rental();
@@ -73,6 +77,7 @@ public class RentalService {
         return rentalMapper.toDto(rentalRepository.save(rental));
     }
 
+    @Transactional
     public RentalResponseDto updateRental(Long id, RentalRequestDto requestDto) {
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
@@ -83,12 +88,14 @@ public class RentalService {
             throw new AccessDeniedException("You can update rentals only for your own account");
         }
 
+        validateDates(requestDto.getStartDate(), requestDto.getEndDate());
+
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        Car car = carRepository.findById(requestDto.getCarId())
+
+        Car car = carRepository.findByIdForUpdate(requestDto.getCarId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
 
-        validateDates(requestDto.getStartDate(), requestDto.getEndDate());
         ensureAvailability(requestDto.getCarId(), requestDto.getStartDate(), requestDto.getEndDate(), id);
 
         rental.setUser(user);
